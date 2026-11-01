@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="xposed_scope">
+        <item>android</item>
+        <item>com.android.systemui</item>
+        <item>com.vivo.daemon</item>
+        <item>com.vivo.abe</item>
+        <item>com.vivo.pem</item>
+        <item>com.vivo.sps</item>
+    </string-array>
+</resources>
