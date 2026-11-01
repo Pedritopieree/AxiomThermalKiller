@@ -7,5 +7,8 @@
         <item>com.vivo.abe</item>
         <item>com.vivo.pem</item>
         <item>com.vivo.sps</item>
+        <item>com.vivo.gamecube</item>
+        <item>com.vivo.gamespace</item>
+        <item>com.vivo.gamewatch</item>
     </string-array>
 </resources>
