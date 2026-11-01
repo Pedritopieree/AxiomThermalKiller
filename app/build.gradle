@@ -1,3 +1,30 @@
 plugins {
-    id 'com.android.application' version '8.2.2' apply false
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.axiom.thermalkiller'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.axiom.thermalkiller"
+        minSdk 28
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        debug { minifyEnabled false }
+        release { minifyEnabled false }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    compileOnly 'de.robv.android.xposed:api:82'
 }
