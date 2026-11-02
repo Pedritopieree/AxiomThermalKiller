@@ -2,7 +2,6 @@ package com.axiom.thermalkiller;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.IXposedHookZygoteInit;
-import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
@@ -14,59 +13,50 @@ public class MainHook implements IXposedHookLoadPackage, IXposedHookZygoteInit {
 
     @Override
     public void initZygote(StartupParam startupParam) {
-        XposedBridge.log(TAG + " : Full GameCube-style unlock armed");
+        XposedBridge.log(TAG + " : Full unlock mode v3");
     }
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
 
-        // ===== Super Resolution (VSR) =====
-        try {
-            Class<?> vsr = XposedHelpers.findClassIfExists("com.vivo.services.game.sr.VSRController", lpparam.classLoader);
-            if (vsr != null) {
-                // Force support for any package
-                XposedHelpers.findAndHookMethod(vsr, "isSupport", String.class, XC_MethodReplacement.returnConstant(true));
-                XposedHelpers.findAndHookMethod(vsr, "isSupported", String.class, XC_MethodReplacement.returnConstant(true));
-            }
-        } catch (Throwable ignored) {}
+        // Force Super Resolution support for every package
+        hookSupport(lpparam, "com.vivo.services.game.sr.VSRController", "isSupport");
+        hookSupport(lpparam, "com.vivo.services.game.sr.VSRController", "isSupported");
+        hookSupport(lpparam, "com.vivo.gameassistant.superresolution.a", "isSupport");
+        hookSupport(lpparam, "com.vivo.gameassistant.superresolution.b", "isSupport");
 
-        // ===== Frame Interpolation =====
-        try {
-            Class<?> fi = XposedHelpers.findClassIfExists("com.vivo.gameassistant.frameinterpolation.f", lpparam.classLoader);
-            if (fi != null) {
-                XposedHelpers.findAndHookMethod(fi, "isSupport", String.class, XC_MethodReplacement.returnConstant(true));
-            }
-        } catch (Throwable ignored) {}
+        // Force Frame Interpolation support
+        hookSupport(lpparam, "com.vivo.gameassistant.frameinterpolation.f", "isSupport");
+        hookSupport(lpparam, "com.vivo.gameassistant.frameinterpolation.h", "isSupport");
 
-        // ===== Game Manager =====
-        try {
-            Class<?> gms = XposedHelpers.findClassIfExists("com.vivo.services.game.GameManagerService", lpparam.classLoader);
-            if (gms != null) {
-                // Force high performance / monster style
-                XposedHelpers.findAndHookMethod(gms, "isGame", String.class, XC_MethodReplacement.returnConstant(true));
-            }
-        } catch (Throwable ignored) {}
+        // Force GameManager to treat everything as game
+        hookSupport(lpparam, "com.vivo.services.game.GameManagerService", "isGame");
 
-        // ===== Thermal still =====
-        if (lpparam.packageName.equals("android") || lpparam.packageName.contains("vivo")) {
+        // Force support list
+        hookSupport(lpparam, "com.vivo.common.supportlist.pojo.a", "isSupport");
+        hookSupport(lpparam, "com.vivo.common.gamemanipulation.a", "isSupport");
+
+        // Thermal
+        if (lpparam.packageName.contains("vivo") || lpparam.packageName.equals("android")) {
             try {
-                Class<?> thermal = XposedHelpers.findClassIfExists("com.vivo.common.VivoThermalControl", lpparam.classLoader);
-                if (thermal != null) {
-                    XposedHelpers.findAndHookMethod(thermal, "isOverheat", XC_MethodReplacement.returnConstant(false));
-                    XposedHelpers.findAndHookMethod(thermal, "needThrottle", XC_MethodReplacement.returnConstant(false));
+                Class<?> t = XposedHelpers.findClassIfExists("com.vivo.common.VivoThermalControl", lpparam.classLoader);
+                if (t != null) {
+                    XposedHelpers.findAndHookMethod(t, "isOverheat", XC_MethodReplacement.returnConstant(false));
+                    XposedHelpers.findAndHookMethod(t, "needThrottle", XC_MethodReplacement.returnConstant(false));
                 }
             } catch (Throwable ignored) {}
         }
 
-        // ===== Force every game as supported =====
+        XposedBridge.log(TAG + " hooks live on " + lpparam.packageName);
+    }
+
+    private void hookSupport(XC_LoadPackage.LoadPackageParam lpparam, String className, String method) {
         try {
-            // Common support list pattern
-            Class<?> support = XposedHelpers.findClassIfExists("com.vivo.common.supportlist.pojo.a", lpparam.classLoader);
-            if (support != null) {
-                XposedHelpers.findAndHookMethod(support, "isSupport", String.class, XC_MethodReplacement.returnConstant(true));
+            Class<?> clazz = XposedHelpers.findClassIfExists(className, lpparam.classLoader);
+            if (clazz != null) {
+                XposedHelpers.findAndHookMethod(clazz, method, String.class, XC_MethodReplacement.returnConstant(true));
+                XposedBridge.log(TAG + " forced " + className + "." + method);
             }
         } catch (Throwable ignored) {}
-
-        XposedBridge.log(TAG + " unlock hooks applied on " + lpparam.packageName);
     }
 }
